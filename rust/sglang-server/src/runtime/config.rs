@@ -138,6 +138,10 @@ pub struct ModelConfig {
     /// boot ([`ServerArgs::validate_mandatory`]).
     #[serde(default)]
     pub vocab_size: Option<u64>,
+    /// Whether the model accepts multimodal inputs. Gates the MM Encoding
+    /// branch in tm-ingress (`false` → mm fields silently ignored).
+    #[serde(default)]
+    pub is_multimodal: bool,
 }
 
 fn default_host() -> String {
@@ -171,6 +175,14 @@ impl ServerArgs {
             return Err("no resolvable vocab size (model_config.vocab_size)".into());
         }
         Ok(())
+    }
+
+    /// Whether the served model is multimodal (`model_config.is_multimodal`
+    /// from the scheduler's dump). Gates the MM Encoding branch: when false,
+    /// mm fields on a request are silently ignored, mirroring the Python
+    /// `TokenizerManager` (`mm_processor is None`).
+    pub fn model_is_multimodal(&self) -> bool {
+        self.model_config.is_multimodal
     }
 
     /// Bind address `host:port`. `host` is expected to be an IP — the result is
